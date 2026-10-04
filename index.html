@@ -1,1 +1,280 @@
-fffffffffffffff
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>d peace - Calculator</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --display-bg: #090d16;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --btn-bg: #334155;
+      --btn-hover: #475569;
+      --btn-active: #64748b;
+      --accent: #06b6d4;
+      --accent-hover: #0891b2;
+      --operator-bg: #2563eb;
+      --operator-hover: #1d4ed8;
+      --clear-bg: #ef4444;
+      --clear-hover: #dc2626;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+
+    .calculator {
+      width: 100%;
+      max-width: 360px;
+      background-color: var(--card-bg);
+      border-radius: 1.5rem;
+      padding: 1.5rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .brand {
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: lowercase;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    .display {
+      background-color: var(--display-bg);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      text-align: right;
+      margin-bottom: 1.25rem;
+      word-wrap: break-word;
+      word-break: break-all;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      min-height: 95px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .expression {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      min-height: 1.2rem;
+    }
+
+    .result {
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+    }
+
+    button {
+      border: none;
+      outline: none;
+      background-color: var(--btn-bg);
+      color: var(--text-main);
+      font-size: 1.25rem;
+      font-weight: 500;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    button:hover {
+      background-color: var(--btn-hover);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      background-color: var(--btn-active);
+      transform: translateY(1px);
+    }
+
+    button.operator {
+      background-color: var(--operator-bg);
+    }
+
+    button.operator:hover {
+      background-color: var(--operator-hover);
+    }
+
+    button.clear {
+      background-color: var(--clear-bg);
+    }
+
+    button.clear:hover {
+      background-color: var(--clear-hover);
+    }
+
+    button.equals {
+      background-color: var(--accent);
+      grid-column: span 2;
+    }
+
+    button.equals:hover {
+      background-color: var(--accent-hover);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="calculator">
+    <div class="brand">d peace</div>
+    <div class="display">
+      <div class="expression" id="expression"></div>
+      <div class="result" id="result">0</div>
+    </div>
+    <div class="keypad">
+      <button class="clear" onclick="clearAll()">AC</button>
+      <button onclick="deleteLast()">DEL</button>
+      <button onclick="appendOperator('%')">%</button>
+      <button class="operator" onclick="appendOperator('/')">÷</button>
+
+      <button onclick="appendNumber('7')">7</button>
+      <button onclick="appendNumber('8')">8</button>
+      <button onclick="appendNumber('9')">9</button>
+      <button class="operator" onclick="appendOperator('*')">×</button>
+
+      <button onclick="appendNumber('4')">4</button>
+      <button onclick="appendNumber('5')">5</button>
+      <button onclick="appendNumber('6')">6</button>
+      <button class="operator" onclick="appendOperator('-')">-</button>
+
+      <button onclick="appendNumber('1')">1</button>
+      <button onclick="appendNumber('2')">2</button>
+      <button onclick="appendNumber('3')">3</button>
+      <button class="operator" onclick="appendOperator('+')">+</button>
+
+      <button onclick="appendNumber('0')">0</button>
+      <button onclick="appendNumber('.')">.</button>
+      <button class="equals" onclick="calculate()">=</button>
+    </div>
+  </div>
+
+  <script>
+    const expressionEl = document.getElementById('expression');
+    const resultEl = document.getElementById('result');
+
+    let currentExpression = '';
+    let shouldResetDisplay = false;
+
+    function updateDisplay() {
+      expressionEl.textContent = currentExpression;
+      if (currentExpression === '') {
+        resultEl.textContent = '0';
+      }
+    }
+
+    function appendNumber(num) {
+      if (shouldResetDisplay) {
+        currentExpression = '';
+        shouldResetDisplay = false;
+      }
+      
+      if (num === '.') {
+        const lastToken = currentExpression.split(/[\+\-\*\/\%]/).pop();
+        if (lastToken.includes('.')) return;
+        if (lastToken === '' || currentExpression === '') {
+          currentExpression += '0';
+        }
+      }
+
+      currentExpression += num;
+      updateDisplay();
+    }
+
+    function appendOperator(op) {
+      if (currentExpression === '' && op !== '-') return;
+      
+      shouldResetDisplay = false;
+
+      const lastChar = currentExpression.slice(-1);
+      if (['+', '-', '*', '/', '%'].includes(lastChar)) {
+        currentExpression = currentExpression.slice(0, -1) + op;
+      } else {
+        currentExpression += op;
+      }
+      updateDisplay();
+    }
+
+    function clearAll() {
+      currentExpression = '';
+      resultEl.textContent = '0';
+      expressionEl.textContent = '';
+      shouldResetDisplay = false;
+    }
+
+    function deleteLast() {
+      if (shouldResetDisplay) {
+        clearAll();
+        return;
+      }
+      currentExpression = currentExpression.slice(0, -1);
+      updateDisplay();
+    }
+
+    function calculate() {
+      if (!currentExpression) return;
+
+      try {
+        let sanitized = currentExpression.replace(/%/g, '/100');
+        const evalResult = new Function(`'use strict'; return (${sanitized})`)();
+
+        if (isNaN(evalResult) || !isFinite(evalResult)) {
+          resultEl.textContent = 'Error';
+        } else {
+          const formatted = Number.isInteger(evalResult) 
+            ? evalResult 
+            : parseFloat(evalResult.toFixed(8));
+          resultEl.textContent = formatted;
+        }
+      } catch (err) {
+        resultEl.textContent = 'Error';
+      }
+      shouldResetDisplay = true;
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key >= '0' && e.key <= '9') appendNumber(e.key);
+      if (e.key === '.') appendNumber('.');
+      if (e.key === '+') appendOperator('+');
+      if (e.key === '-') appendOperator('-');
+      if (e.key === '*') appendOperator('*');
+      if (e.key === '/') appendOperator('/');
+      if (e.key === '%') appendOperator('%');
+      if (e.key === 'Enter' || e.key === '=') {
+        e.preventDefault();
+        calculate();
+      }
+      if (e.key === 'Backspace') deleteLast();
+      if (e.key === 'Escape') clearAll();
+    });
+  </script>
+</body>
+</html>
